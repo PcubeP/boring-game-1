@@ -13,6 +13,7 @@ const player = {
 
 let potholes = [];
 let scenery = [];
+let signs = [];
 
 let gameState = 'start';
 let score = 0;
@@ -21,14 +22,50 @@ let spawnTimer = 0;
 let roadOffset = 0;
 let flashTimer = 0;
 
-const keys = {
-  left: false,
-  right: false
-};
+const locations = [
+  {
+    name: 'KORAMANGALA',
+    distance: 0
+  },
+  {
+    name: 'SILK BOARD',
+    distance: 250
+  },
+  {
+    name: 'OUTER RING ROAD',
+    distance: 500
+  },
+  {
+    name: 'INDIRANAGAR',
+    distance: 750
+  },
+  {
+    name: 'KR PURAM',
+    distance: 1000
+  },
+  {
+    name: 'WHITEFIELD',
+    distance: 1250
+  },
+  {
+    name: 'HEBBAL',
+    distance: 1500
+  },
+  {
+    name: 'ELECTRONIC CITY',
+    distance: 1750
+  }
+];
 
-// --------------------------------------------------
-// Canvas / Road
-// --------------------------------------------------
+const roadSigns = [
+  'NAMMA BENGALURU',
+  'ROAD WORK AHEAD',
+  'EXPECT DELAYS',
+  'BBMP ROAD',
+  'USE ALTERNATE ROUTE',
+  'TRAFFIC DIVERSION',
+  'POTHOLES AHEAD'
+];
 
 function resize() {
   canvas.width = window.innerWidth;
@@ -62,17 +99,28 @@ function getLaneX(lane) {
   );
 }
 
-// --------------------------------------------------
-// Start / Reset
-// --------------------------------------------------
+function getLocation() {
+  let current = locations[0];
+
+  for (const location of locations) {
+    if (score >= location.distance) {
+      current = location;
+    }
+  }
+
+  return current.name;
+}
 
 function startGame() {
   potholes = [];
+  signs = [];
+
   score = 0;
   speed = 5;
   spawnTimer = 50;
   roadOffset = 0;
   flashTimer = 0;
+
   player.lane = 1;
   player.x = getLaneX(player.lane);
 
@@ -84,10 +132,6 @@ function gameOver() {
   flashTimer = 15;
 }
 
-// --------------------------------------------------
-// Scenery
-// --------------------------------------------------
-
 function createScenery() {
   scenery = [];
 
@@ -95,7 +139,7 @@ function createScenery() {
     scenery.push({
       side: Math.random() < 0.5 ? 'left' : 'right',
       y: Math.random() * canvas.height,
-      type: Math.floor(Math.random() * 3),
+      type: Math.floor(Math.random() * 5),
       speed: 0.7 + Math.random() * 0.5
     });
   }
@@ -107,8 +151,9 @@ function updateScenery() {
 
     if (object.y > canvas.height + 100) {
       object.y = -100;
-      object.side = Math.random() < 0.5 ? 'left' : 'right';
-      object.type = Math.floor(Math.random() * 3);
+      object.side =
+        Math.random() < 0.5 ? 'left' : 'right';
+      object.type = Math.floor(Math.random() * 5);
     }
   }
 }
@@ -117,7 +162,8 @@ function drawScenery() {
   const road = getRoad();
 
   for (const object of scenery) {
-    const distanceFromRoad = 50 + Math.sin(object.y * 0.01) * 15;
+    const distanceFromRoad =
+      50 + Math.sin(object.y * 0.01) * 15;
 
     const x =
       object.side === 'left'
@@ -128,8 +174,12 @@ function drawScenery() {
       drawTree(x, object.y);
     } else if (object.type === 1) {
       drawStreetLight(x, object.y);
-    } else {
+    } else if (object.type === 2) {
       drawBuilding(x, object.y);
+    } else if (object.type === 3) {
+      drawAuto(x, object.y);
+    } else {
+      drawBus(x, object.y);
     }
   }
 }
@@ -160,7 +210,10 @@ function drawStreetLight(x, y) {
   ctx.beginPath();
   ctx.moveTo(x, y + 60);
   ctx.lineTo(x, y - 10);
-  ctx.lineTo(x + (x < canvas.width / 2 ? 25 : -25), y - 10);
+  ctx.lineTo(
+    x + (x < canvas.width / 2 ? 25 : -25),
+    y - 10
+  );
   ctx.stroke();
 
   ctx.fillStyle = '#fff8b0';
@@ -182,7 +235,13 @@ function drawBuilding(x, y) {
   const height = 90;
 
   ctx.fillStyle = '#9b8065';
-  ctx.fillRect(x - width / 2, y - height, width, height);
+
+  ctx.fillRect(
+    x - width / 2,
+    y - height,
+    width,
+    height
+  );
 
   ctx.fillStyle = '#4d6875';
 
@@ -198,20 +257,66 @@ function drawBuilding(x, y) {
   }
 }
 
-// --------------------------------------------------
-// Road
-// --------------------------------------------------
+function drawAuto(x, y) {
+  ctx.fillStyle = '#1c8c45';
+
+  ctx.beginPath();
+  ctx.moveTo(x - 18, y + 25);
+  ctx.lineTo(x - 12, y - 5);
+  ctx.lineTo(x + 12, y - 5);
+  ctx.lineTo(x + 18, y + 25);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#111';
+  ctx.fillRect(x - 17, y + 18, 34, 7);
+
+  ctx.fillStyle = '#ddd';
+  ctx.fillRect(x - 8, y, 16, 12);
+}
+
+function drawBus(x, y) {
+  ctx.fillStyle = '#e8a317';
+
+  ctx.fillRect(
+    x - 25,
+    y - 55,
+    50,
+    80
+  );
+
+  ctx.fillStyle = '#222';
+
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(
+      x - 18 + i * 13,
+      y - 45,
+      9,
+      15
+    );
+  }
+
+  ctx.fillStyle = '#111';
+
+  ctx.fillRect(x - 28, y + 10, 7, 15);
+  ctx.fillRect(x + 21, y + 10, 7, 15);
+}
 
 function drawBackground() {
   ctx.fillStyle = '#86c95a';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 }
 
 function drawRoad() {
   const road = getRoad();
 
-  // Road
   ctx.fillStyle = '#464646';
+
   ctx.fillRect(
     road.left,
     0,
@@ -219,7 +324,6 @@ function drawRoad() {
     canvas.height
   );
 
-  // Road edges
   ctx.fillStyle = '#d6d6d6';
 
   ctx.fillRect(
@@ -236,7 +340,6 @@ function drawRoad() {
     canvas.height
   );
 
-  // Lane markings
   ctx.strokeStyle = '#f4f4f4';
   ctx.lineWidth = 5;
   ctx.setLineDash([45, 35]);
@@ -259,10 +362,6 @@ function drawRoad() {
   ctx.setLineDash([]);
   ctx.lineDashOffset = 0;
 }
-
-// --------------------------------------------------
-// Potholes
-// --------------------------------------------------
 
 function spawnPothole() {
   const road = getRoad();
@@ -302,10 +401,10 @@ function drawPotholes() {
 
     ctx.rotate(pothole.rotation);
 
-    // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
 
     ctx.beginPath();
+
     ctx.ellipse(
       0,
       5,
@@ -318,10 +417,10 @@ function drawPotholes() {
 
     ctx.fill();
 
-    // Pothole
     ctx.fillStyle = '#171717';
 
     ctx.beginPath();
+
     ctx.ellipse(
       0,
       0,
@@ -334,10 +433,10 @@ function drawPotholes() {
 
     ctx.fill();
 
-    // Inner depth
     ctx.fillStyle = '#080808';
 
     ctx.beginPath();
+
     ctx.ellipse(
       -4,
       -3,
@@ -350,20 +449,22 @@ function drawPotholes() {
 
     ctx.fill();
 
-    // Cracks
     ctx.strokeStyle = '#222';
     ctx.lineWidth = 3;
 
     for (let i = 0; i < 5; i++) {
       ctx.beginPath();
+
       ctx.moveTo(
         Math.cos(i) * 25,
         Math.sin(i) * 15
       );
+
       ctx.lineTo(
         Math.cos(i) * 45,
         Math.sin(i) * 25
       );
+
       ctx.stroke();
     }
 
@@ -371,20 +472,16 @@ function drawPotholes() {
   }
 }
 
-// --------------------------------------------------
-// Car
-// --------------------------------------------------
-
 function drawCar() {
   const x = player.x;
   const y = player.y;
 
   ctx.save();
 
-  // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
 
   ctx.beginPath();
+
   ctx.ellipse(
     x + player.width / 2,
     y + player.height + 5,
@@ -397,16 +494,24 @@ function drawCar() {
 
   ctx.fill();
 
-  // Wheels
   ctx.fillStyle = '#111';
 
   ctx.fillRect(x - 7, y + 20, 10, 28);
-  ctx.fillRect(x + player.width - 3, y + 20, 10, 28);
+  ctx.fillRect(
+    x + player.width - 3,
+    y + 20,
+    10,
+    28
+  );
 
   ctx.fillRect(x - 7, y + 68, 10, 28);
-  ctx.fillRect(x + player.width - 3, y + 68, 10, 28);
+  ctx.fillRect(
+    x + player.width - 3,
+    y + 68,
+    10,
+    28
+  );
 
-  // Body
   ctx.fillStyle = '#d62828';
 
   ctx.beginPath();
@@ -421,7 +526,6 @@ function drawCar() {
 
   ctx.fill();
 
-  // Hood
   ctx.fillStyle = '#ef3b3b';
 
   ctx.fillRect(
@@ -431,7 +535,6 @@ function drawCar() {
     35
   );
 
-  // Roof
   ctx.fillStyle = '#b91f1f';
 
   ctx.beginPath();
@@ -446,7 +549,6 @@ function drawCar() {
 
   ctx.fill();
 
-  // Windows
   ctx.fillStyle = '#182a35';
 
   ctx.beginPath();
@@ -461,7 +563,6 @@ function drawCar() {
 
   ctx.fill();
 
-  // Rear windshield
   ctx.fillStyle = '#243b48';
 
   ctx.fillRect(
@@ -471,7 +572,6 @@ function drawCar() {
     10
   );
 
-  // Tail lights
   ctx.fillStyle = '#ff4d4d';
 
   ctx.fillRect(
@@ -491,16 +591,83 @@ function drawCar() {
   ctx.restore();
 }
 
-// --------------------------------------------------
-// Collision
-// --------------------------------------------------
+function spawnSign() {
+  const road = getRoad();
+
+  signs.push({
+    text:
+      roadSigns[
+        Math.floor(Math.random() * roadSigns.length)
+      ],
+    side:
+      Math.random() < 0.5
+        ? 'left'
+        : 'right',
+    y: -80
+  });
+}
+
+function updateSigns() {
+  for (const sign of signs) {
+    sign.y += speed;
+  }
+
+  signs = signs.filter(
+    sign => sign.y < canvas.height + 100
+  );
+}
+
+function drawSigns() {
+  const road = getRoad();
+
+  for (const sign of signs) {
+    const x =
+      sign.side === 'left'
+        ? road.left - 110
+        : road.left + road.width + 110;
+
+    ctx.fillStyle = '#555';
+
+    ctx.fillRect(
+      x - 3,
+      sign.y,
+      6,
+      65
+    );
+
+    ctx.fillStyle = '#1565c0';
+
+    ctx.fillRect(
+      x - 75,
+      sign.y - 45,
+      150,
+      45
+    );
+
+    ctx.fillStyle = '#fff';
+
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+
+    ctx.fillText(
+      sign.text,
+      x,
+      sign.y - 20
+    );
+
+    ctx.textAlign = 'left';
+  }
+}
 
 function checkCollision() {
   for (const pothole of potholes) {
     if (
       pothole.lane === player.lane &&
-      pothole.y + pothole.height / 2 >= player.y + 20 &&
-      pothole.y - pothole.height / 2 <=
+      pothole.y +
+        pothole.height / 2 >=
+        player.y + 20 &&
+      pothole.y -
+        pothole.height / 2 <=
         player.y + player.height
     ) {
       gameOver();
@@ -509,27 +676,24 @@ function checkCollision() {
   }
 }
 
-// --------------------------------------------------
-// HUD
-// --------------------------------------------------
-
 function drawHUD() {
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
 
   ctx.fillRect(
     15,
     15,
-    230,
-    75
+    270,
+    105
   );
 
   ctx.fillStyle = '#fff';
+
   ctx.font = 'bold 22px Arial';
 
   ctx.fillText(
     `DISTANCE ${Math.floor(score)}m`,
     30,
-    45
+    43
   );
 
   ctx.font = '16px Arial';
@@ -537,16 +701,23 @@ function drawHUD() {
   ctx.fillText(
     `SPEED ${Math.floor(speed * 20)} km/h`,
     30,
-    72
+    68
+  );
+
+  ctx.font = 'bold 17px Arial';
+
+  ctx.fillStyle = '#ffd54f';
+
+  ctx.fillText(
+    `📍 ${getLocation()}`,
+    30,
+    97
   );
 }
 
-// --------------------------------------------------
-// Screens
-// --------------------------------------------------
-
 function drawStartScreen() {
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+
   ctx.fillRect(
     0,
     0,
@@ -559,18 +730,31 @@ function drawStartScreen() {
   ctx.fillStyle = '#fff';
 
   ctx.font = 'bold 70px Arial';
+
   ctx.fillText(
     'POTHOLE RUN',
     canvas.width / 2,
-    canvas.height / 2 - 80
+    canvas.height / 2 - 90
   );
 
-  ctx.font = '28px Arial';
+  ctx.font = '30px Arial';
+
+  ctx.fillStyle = '#ffd54f';
+
+  ctx.fillText(
+    'NAMMA BENGALURU EDITION',
+    canvas.width / 2,
+    canvas.height / 2 - 35
+  );
+
+  ctx.fillStyle = '#fff';
+
+  ctx.font = '22px Arial';
 
   ctx.fillText(
     'Bangalore roads. Infinite suffering.',
     canvas.width / 2,
-    canvas.height / 2 - 25
+    canvas.height / 2 + 15
   );
 
   ctx.font = 'bold 24px Arial';
@@ -578,7 +762,7 @@ function drawStartScreen() {
   ctx.fillText(
     'PRESS SPACE TO START',
     canvas.width / 2,
-    canvas.height / 2 + 55
+    canvas.height / 2 + 75
   );
 
   ctx.font = '18px Arial';
@@ -586,14 +770,14 @@ function drawStartScreen() {
   ctx.fillText(
     'A / D or ← / → to change lanes',
     canvas.width / 2,
-    canvas.height / 2 + 95
+    canvas.height / 2 + 115
   );
 
   ctx.textAlign = 'left';
 }
 
 function drawGameOverScreen() {
-  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
 
   ctx.fillRect(
     0,
@@ -611,7 +795,7 @@ function drawGameOverScreen() {
   ctx.fillText(
     'GAME OVER',
     canvas.width / 2,
-    canvas.height / 2 - 60
+    canvas.height / 2 - 75
   );
 
   ctx.font = '28px Arial';
@@ -619,23 +803,29 @@ function drawGameOverScreen() {
   ctx.fillText(
     `Distance: ${Math.floor(score)}m`,
     canvas.width / 2,
-    canvas.height / 2
+    canvas.height / 2 - 15
   );
+
+  ctx.fillStyle = '#ffd54f';
 
   ctx.font = 'bold 22px Arial';
 
   ctx.fillText(
+    `You reached ${getLocation()}`,
+    canvas.width / 2,
+    canvas.height / 2 + 25
+  );
+
+  ctx.fillStyle = '#fff';
+
+  ctx.fillText(
     'PRESS SPACE TO TRY AGAIN',
     canvas.width / 2,
-    canvas.height / 2 + 60
+    canvas.height / 2 + 80
   );
 
   ctx.textAlign = 'left';
 }
-
-// --------------------------------------------------
-// Game Update
-// --------------------------------------------------
 
 function update() {
   if (gameState !== 'playing') {
@@ -659,8 +849,22 @@ function update() {
     );
   }
 
+  if (
+    Math.floor(score) % 180 === 0 &&
+    Math.floor(score) !== 0
+  ) {
+    if (
+      !signs.some(
+        sign => sign.y > -200
+      )
+    ) {
+      spawnSign();
+    }
+  }
+
   updatePotholes();
   updateScenery();
+  updateSigns();
 
   checkCollision();
 
@@ -669,14 +873,11 @@ function update() {
   }
 }
 
-// --------------------------------------------------
-// Draw
-// --------------------------------------------------
-
 function draw() {
   drawBackground();
   drawScenery();
   drawRoad();
+  drawSigns();
   drawPotholes();
   drawCar();
 
@@ -705,10 +906,6 @@ function draw() {
     );
   }
 }
-
-// --------------------------------------------------
-// Input
-// --------------------------------------------------
 
 window.addEventListener(
   'keydown',
@@ -743,24 +940,15 @@ window.addEventListener(
 
     if (
       event.code === 'Space' &&
-      (gameState === 'start' ||
-        gameState === 'gameover')
+      (
+        gameState === 'start' ||
+        gameState === 'gameover'
+      )
     ) {
       startGame();
     }
   }
 );
-
-// --------------------------------------------------
-// Loop
-// --------------------------------------------------
-
-function gameLoop() {
-  update();
-  draw();
-
-  requestAnimationFrame(gameLoop);
-}
 
 window.addEventListener(
   'resize',
@@ -769,3 +957,10 @@ window.addEventListener(
 
 resize();
 gameLoop();
+
+function gameLoop() {
+  update();
+  draw();
+
+  requestAnimationFrame(gameLoop);
+}
