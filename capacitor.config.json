@@ -1,0 +1,17 @@
+{
+  "appId": "com.namma.potholedodger",
+  "appName": "Pothole Dodger Bengaluru",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Pothole Dodger: Bengaluru",
+  "short_name": "PotholeDodger",
+  "description": "Dodge Bangalore potholes, autos, and wrong-way drivers in this high octane arcade runner!",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#07111c",
+  "theme_color": "#07111c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
