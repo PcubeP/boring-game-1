@@ -1,4 +1,45 @@
 import Phaser from 'phaser';
+import './polyfill.js';
+
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+const LERP = (a, b, t) => a + (b - a) * t;
+
+const rand = (min, max) => min + Math.random() * (max - min);
+
+const toFixed = (n, d=0) => Number(n.toFixed(d));
+
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+const easeInOutSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
+
+const shake = (scene, duration=250, intensity=0.02) => {
+  if (scene?.cameras?.main?.shake) scene.cameras.main.shake(duration, intensity);
+};
+
+const rgba = (r,g,b,a)=>`rgba(${r},${g},${b},${a})`;
+
+const lerpColor = (c1, c2, t) => {
+  const r1=(c1>>16)&255,g1=(c1>>8)&255,b1=c1&255;
+  const r2=(c2>>16)&255,g2=(c2>>8)&255,b2=c2&255;
+  const r=Math.round(lerpColor._lerp(r1,r2,t));
+  const g=Math.round(lerpColor._lerp(g1,g2,t));
+  const b=Math.round(lerpColor._lerp(b1,b2,t));
+  return (r<<16)|(g<<8)|b;
+};
+lerpColor._lerp = (a,b,t)=>a+(b-a)*t;
+
+const noise1D = (x) => {
+  const s = Math.sin(x * 12.9898) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+const wobble = (time, speed, amp) => Math.sin(time*speed)*amp;
+
+const flipSign = () => (Math.random() < 0.5 ? -1 : 1);
+
+const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+
 import { W, H, HORIZON, PLAYER_Y, LANES, LOCATIONS, VEHICLES, BANGALORE_QUIPS } from './constants.js';
 import { Storage } from './storage.js';
 import { AudioFX } from './audio.js';
